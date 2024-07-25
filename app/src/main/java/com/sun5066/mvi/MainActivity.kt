@@ -13,13 +13,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sun5066.core.mvi.android.collectAsContainerStateWithLifecycle
+import com.sun5066.core.mvi.android.collectContainerSideEffect
 import com.sun5066.mvi.ui.theme.MviTheme
-import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,14 +43,12 @@ fun Greeting(
     viewModel: MainViewModel = viewModel(),
 ) {
     val context = LocalContext.current
-    val state by viewModel.container.stateFlow.collectAsState()
+    val state by viewModel.collectAsContainerStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.container.sideEffect.collectLatest { sideEffect ->
-            when (sideEffect) {
-                is MainSideEffect.Toast -> {
-                    Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
-                }
+    viewModel.collectContainerSideEffect {sideEffect ->
+        when (sideEffect) {
+            is MainSideEffect.Toast -> {
+                Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -58,6 +56,7 @@ fun Greeting(
     LaunchedEffect(state) {
         Log.d("123123", "state: $state")
     }
+
     Text(
         text = "Count: ${state.count}",
         modifier = modifier.clickable { viewModel.increment() }
